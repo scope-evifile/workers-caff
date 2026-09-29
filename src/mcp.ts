@@ -148,6 +148,24 @@ export function createCaffMcpServer(caff: Caff) {
     }
   );
 
+  server.registerTool(
+    "low_stock",
+    {
+      title: "Find low-stock menu items",
+      description:
+        "Show menu items with no more than the given number of portions left, lowest stock first. Use this to decide what needs restocking.",
+      inputSchema: z.object({
+        threshold: z.number().int().min(0).max(50).default(10).describe("Maximum portions left to include")
+      }),
+      annotations: { readOnlyHint: true }
+    },
+    async ({ threshold }) => {
+      const menu = await caff.getMenu();
+      const items = menu.filter((item) => item.stock <= threshold).sort((a, b) => a.stock - b.stock);
+      return asText(items);
+    }
+  );
+
   return server;
 }
 
