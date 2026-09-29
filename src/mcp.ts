@@ -166,6 +166,39 @@ export function createCaffMcpServer(caff: Caff) {
     }
   );
 
+  server.registerTool(
+    "request_refund",
+    {
+      title: "Request a refund",
+      description:
+        "Ask a human manager to approve a refund for an order. Returns an approval request that remains pending until the manager decides.",
+      inputSchema: z.object({
+        orderId: z.number().int().min(1).describe("Order number to refund"),
+        reason: z.string().min(1).max(200).describe("Why the customer wants a refund")
+      })
+    },
+    async ({ orderId, reason }) => {
+      const approval = await caff.requestRefund(orderId, reason);
+      return asText(approval);
+    }
+  );
+
+  server.registerTool(
+    "check_approval",
+    {
+      title: "Check a refund request",
+      description: "Check whether a human manager has approved or rejected a refund request.",
+      inputSchema: z.object({
+        approvalId: z.number().int().min(1).describe("Approval request id from request_refund")
+      }),
+      annotations: { readOnlyHint: true }
+    },
+    async ({ approvalId }) => {
+      const approval = await caff.checkApproval(approvalId);
+      return asText(approval);
+    }
+  );
+
   return server;
 }
 
